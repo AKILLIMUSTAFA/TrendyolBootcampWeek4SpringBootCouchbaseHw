@@ -7,7 +7,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
 @RequestMapping("/")
-public class IndexController {
+public class SwaggerController {
 
     @GetMapping
     public RedirectView index() {
