@@ -1,8 +1,7 @@
 package com.kodluyoruz.trendyol.springbootcouchbaseplaylist.services;
 
 import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.contracts.request.AddTrackRequest;
-import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.contracts.request.UpdateTrackRequest;
-import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.contracts.response.TrackResponse;
+import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.models.Playlist;
 import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.models.Track;
 import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.repositories.PlaylistRepository;
 import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.repositories.TrackRepository;
@@ -14,32 +13,34 @@ import java.util.List;
 public class TrackService {
 
     private final TrackRepository trackRepository;
+    private final PlaylistRepository playlistRepository;
 
-    public TrackService(TrackRepository trackRepository) {
+    public TrackService(TrackRepository trackRepository, PlaylistRepository playlistRepository) {
         this.trackRepository = trackRepository;
+        this.playlistRepository = playlistRepository;
     }
 
-    public List<TrackResponse> findAllByPlaylistId(String playlistId) {
-        return this.trackRepository.findAllByPlaylistId(playlistId);
-    }
-
-    public TrackResponse findByTrackName(String playlistId, String trackName) {
-        return this.trackRepository.findByTrackName(playlistId,trackName);
-    }
-
-    public boolean deleteByTrackName(String playlistId, String trackName) {
-        return this.trackRepository.deleteByTrackName(playlistId,trackName);
+    public boolean deleteByTrack(String playlistId, String trackName) {
+        try{
+            Playlist playlist = playlistRepository.findByPlaylistId(playlistId);
+            boolean result = playlist.deleteTracks(trackName);
+            if(result){
+                playlistRepository.update(playlist);
+            }
+            return true;
+        }catch (NullPointerException ex){
+            return false;
+        }
     }
 
     public boolean isAddTrackRequestValid(AddTrackRequest addTrackRequest) {
         return this.trackRepository.isAddTrackRequestValid(addTrackRequest);
     }
 
-    public Track createATrack(AddTrackRequest addTrackRequest) {
-        return this.trackRepository.insert(addTrackRequest);
-    }
-
-    public boolean updateATrack(String playlistId, String trackName, UpdateTrackRequest updateTrackRequest) {
-        return this.trackRepository.update(playlistId,trackName,updateTrackRequest);
+    public Track createATrack(String playlistId, AddTrackRequest addTrackRequest) {
+        Playlist playlist = playlistRepository.findByPlaylistId(playlistId);
+        playlist.addTrack(addTrackRequest);
+        playlistRepository.update(playlist);
+        return playlist.getTracks().get(playlist.getTracks().size() - 1);
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -29,23 +30,21 @@ public class PlaylistController {
 
     @GetMapping("/{playlistsId}")
     public ResponseEntity getAPlaylist(@PathVariable String playlistsId) {
-        if (playlistsId.contains("-")) {
+        if (playlistsId.contains("*")) {
             throw new InvalidIdException();
         }
 
-        PlaylistResponse response = this.playlistService.findByPlaylistId(playlistsId);
-
-        if(response == null)
-        {
+        try{
+            PlaylistResponse response = this.playlistService.findByPlaylistId(playlistsId).createPlaylistResponse();
+            return ResponseEntity.ok(response);
+        }catch (NullPointerException ex){
             throw new IdNotFoundException();
         }
-
-        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{playlistsId}")
     public ResponseEntity deleteAPlaylist(@PathVariable String playlistsId) {
-        if (playlistsId.contains("-")) {
+        if (playlistsId.contains("*")) {
             throw new InvalidIdException();
         }
 
@@ -70,12 +69,12 @@ public class PlaylistController {
     }
 
     @PatchMapping("/{playlistsId}")
-    public ResponseEntity updateAPlaylist(@PathVariable String playlistsId, @RequestParam UpdatePlaylistRequest updatePlaylistRequest) {
+    public ResponseEntity updateAPlaylist(@PathVariable String playlistsId, @RequestBody(required = false) UpdatePlaylistRequest updatePlaylistRequest) {
         if(updatePlaylistRequest == null){
             throw new RequestMissingInformationException();
         }
 
-        if (playlistsId.contains("-")) {
+        if (playlistsId.contains("*")) {
             throw new InvalidIdException();
         }
 
@@ -89,18 +88,18 @@ public class PlaylistController {
 
     @GetMapping
     public ResponseEntity<List<PlaylistResponse>> getSeveralPlaylist(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String followersCount,
-            @RequestParam(required = false) String trackCount,
-            @RequestParam(required = false) String userId,
-            @RequestParam(required = false) Integer pageOffset,
-            @RequestParam(required = false) Integer pageSize
+            @RequestParam(required = false) String userId
     ) {
 
-        List<PlaylistResponse> playlists = this.playlistService.findAll(name, followersCount,
-                trackCount, userId, pageOffset, pageSize);
+        List<Playlist> playlists = this.playlistService.findAll(userId);
 
-        return ResponseEntity.ok(playlists);
+        List<PlaylistResponse> playlistResponses = new ArrayList<>();
+
+        for (int i = 0; i < playlists.size(); i++) {
+            playlistResponses.add(playlists.get(i).createPlaylistResponse());
+        }
+
+        return ResponseEntity.ok(playlistResponses);
     }
 
 }

@@ -2,7 +2,6 @@ package com.kodluyoruz.trendyol.springbootcouchbaseplaylist.services;
 
 import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.contracts.request.AddPlaylistRequest;
 import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.contracts.request.UpdatePlaylistRequest;
-import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.contracts.response.PlaylistResponse;
 import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.models.Playlist;
 import com.kodluyoruz.trendyol.springbootcouchbaseplaylist.repositories.PlaylistRepository;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,7 @@ public class PlaylistService {
         this.playlistRepository = playlistRepository;
     }
 
-    public PlaylistResponse findByPlaylistId(String playlistId) {
+    public Playlist findByPlaylistId(String playlistId) {
         return this.playlistRepository.findByPlaylistId(playlistId);
     }
 
@@ -34,12 +33,13 @@ public class PlaylistService {
         return this.playlistRepository.insert(addPlaylistRequest);
     }
 
-    public boolean updateAPlaylist(String playlistsId, UpdatePlaylistRequest updatePlaylistRequest) {
-        return this.playlistRepository.update(playlistsId,updatePlaylistRequest);
+    public boolean updateAPlaylist(String playlistId, UpdatePlaylistRequest updatePlaylistRequest) {
+        Playlist playlist = playlistRepository.findByPlaylistId(playlistId);
+        playlist.updateByRequest(updatePlaylistRequest);
+        return playlistRepository.update(playlist);
     }
 
-    public List<PlaylistResponse> findAll(String name, String followersCount, String trackCount,
-                                          String userId, Integer pageOffset, Integer pageSize) {
-        return this.playlistRepository.findAll(name, followersCount,trackCount, userId, pageOffset, pageSize);
+    public List<Playlist> findAll(String userId) {
+        return this.playlistRepository.findAll(userId);
     }
 }
